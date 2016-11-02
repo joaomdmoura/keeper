@@ -19,11 +19,11 @@ defmodule Keeper.Mixfile do
   end
 
   def application do
-    [applications: [:logger]]
+    [applications: [:logger, :comeonin]]
   end
 
   defp deps do
-    []
+    [{:comeonin, "~> 2.5"}]
   end
 
   defp package do
