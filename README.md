@@ -2,6 +2,9 @@
 
 Flexible and out of the box authentication solution for Phoenix ~ Devise like
 
+[![Build Status](https://travis-ci.org/joaomdmoura/keeper.svg?branch=master)](https://travis-ci.org/joaomdmoura/keeper)
+[![Inline docs](http://inch-ci.org/github/joaomdmoura/keeper.svg)](http://inch-ci.org/github/joaomdmoura/keeper)
+
 ## Disclaimer
 **Keeper** is under heavy development and is still on it's first RC, you are more then welcome to contribute, but I'd definitely not recommend using it right now.
 
