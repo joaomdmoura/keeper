@@ -2,6 +2,9 @@
 
 Flexible and out of the box authentication solution for Phoenix ~ Devise like
 
+## Disclaimer
+**Keeper** is under heavy development and is still on it's first RC, you are more then welcome to contribute, but I'd definitely not recommend using it right now.
+
 ## Installation
 
   1. Add `keeper` to your list of dependencies in `mix.exs`:
@@ -18,4 +21,12 @@ Flexible and out of the box authentication solution for Phoenix ~ Devise like
     def application do
       [applications: [:keeper]]
     end
+    ```
+
+  3. Run the installer
+
+    You can replace `User` by the name of the module you want **Keeper** to create,
+    or be applied to (if it already exists).
+    ```
+    $ mix keeper.install User
     ```
