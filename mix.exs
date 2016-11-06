@@ -23,7 +23,8 @@ defmodule Keeper.Mixfile do
   end
 
   defp deps do
-    [{:comeonin, "~> 2.5"}]
+    [{:phoenix, "~> 1.2.1"},
+     {:comeonin, "~> 2.5"}]
   end
 
   defp package do
