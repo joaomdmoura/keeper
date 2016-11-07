@@ -6,9 +6,10 @@ defmodule Mix.Tasks.Keeper.Install do
   @moduledoc """
   Installs Keeper for a specific Phoenix resource.
 
-      mix keeper.install User
+      mix keeper.install User users
 
-  The argument is the module name.
+  The first argument is the module name followed by its plural
+  name.
 
   The installation task will follow:
 
@@ -20,7 +21,18 @@ defmodule Mix.Tasks.Keeper.Install do
 
   def run(args) do
     {_, parsed, _} = OptionParser.parse(args)
-    validate_args!(parsed)
+
+    parsed
+    |> validate_args!
+    |> generate_model
+  end
+
+  defp generate_model([resource_name, plural_resource_name] = args) do
+    Mix.Tasks.Phoenix.Gen.Model.run [
+      resource_name,
+      plural_resource_name,
+      "email:string"
+    ]
   end
 
   defp model_defined?(model) do
@@ -42,12 +54,14 @@ defmodule Mix.Tasks.Keeper.Install do
     end
   end
 
-  defp validate_args!([model_name] = args) do
+  defp validate_args!([resource_name, plural_resource_name] = args) do
     cond do
-      String.contains?(model_name, ":") ->
+      String.contains?(resource_name, ":") ->
         raise_with_help()
-      model_name != Phoenix.Naming.camelize(model_name) ->
-        Mix.raise "Expected the resource name argument, #{inspect model_name}, to be camelcase"
+      resource_name != Phoenix.Naming.camelize(resource_name) ->
+        Mix.raise "Expected the resource name argument, #{inspect resource_name}, to be camelcase"
+      plural_resource_name != Phoenix.Naming.underscore(plural_resource_name) ->
+        Mix.raise "Expected the resource plural name argument, #{inspect plural_resource_name}, to be lowercase"
       true ->
         args
     end

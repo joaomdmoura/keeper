@@ -17,4 +17,16 @@ defmodule Mix.Tasks.Keeper.InstallTest do
       Mix.Tasks.Keeper.Install.run ["user"]
     end
   end
+
+  test "resource plural name must be passed as an argument" do
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Keeper.Install.run ["User"]
+    end
+  end
+
+  test "resource plural name must be lowercased" do
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Keeper.Install.run ["User", "User"]
+    end
+  end
 end
