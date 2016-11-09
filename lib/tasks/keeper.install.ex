@@ -31,7 +31,8 @@ defmodule Mix.Tasks.Keeper.Install do
     Mix.Tasks.Phoenix.Gen.Model.run [
       resource_name,
       plural_resource_name,
-      "email:string"
+      "email:string",
+      "password_hash:string"
     ]
   end
 
@@ -76,7 +77,7 @@ defmodule Mix.Tasks.Keeper.Install do
     mix keeper.install expects a singular name of the resource that it should
     create or be applied to:
 
-        mix keeper.install User
+        mix keeper.install User users
     """
   end
 end
