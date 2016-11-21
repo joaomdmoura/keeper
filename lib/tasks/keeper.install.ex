@@ -19,22 +19,39 @@ defmodule Mix.Tasks.Keeper.Install do
     * Generate view files.
   """
 
+  @doc """
+  Main method for the install task
+  """
   def run(args) do
     {_, parsed, _} = OptionParser.parse(args)
+    valid_args = parsed |> validate_args!
 
-    parsed
-    |> validate_args!
-    |> generate_model
+    Task.start fn -> generate_model(valid_args) end
+
+    print_instructions
   end
 
-  defp generate_model([resource_name, plural_resource_name] = args) do
-    Mix.Tasks.Phoenix.Gen.Model.run [
-      resource_name,
-      plural_resource_name,
-      "email:string",
-      "password_hash:string"
-    ]
+  defp generate_model([resource_name, plural_resource_name] = _args) do
+    unless model_defined?(resource_name) do
+      Mix.Tasks.Phoenix.Gen.Model.run [
+        resource_name,
+        plural_resource_name,
+        "email:string",
+        "password_hash:string"
+      ]
+    end
   end
+
+  defp print_instructions do
+   Mix.shell.info (
+     """
+     Now you're ready to go, just make sure you follow the next simple steps:
+
+     #  Run the migrations
+     $ mix ecto.migrate
+     """
+   )
+ end
 
   defp model_defined?(model) do
     schema = Module.concat model, nil
@@ -43,14 +60,17 @@ defmodule Mix.Tasks.Keeper.Install do
 
   defp module_exists?(module, path) do
     case File.ls path do
-      {:ok, files} ->
-        Enum.any? files, fn fname ->
-          case File.read Path.join(path, fname) do
-            {:ok, contents} ->
-              contents =~ ~r/defmodule\s*#{inspect module}/
-            {:error, _} -> false
-          end
-        end
+      {:ok, files} -> Enum.any? files, fn(fname) ->
+        Path.join(path, fname)
+        |> matches_module_definition?(module)
+      end
+      {:error, _} -> false
+    end
+  end
+
+  defp matches_module_definition?(file, module) do
+    case File.read file do
+      {:ok, contents} -> contents =~ ~r/defmodule\s*#{inspect module}/
       {:error, _} -> false
     end
   end

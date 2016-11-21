@@ -30,7 +30,7 @@ Flexible and out of the box authentication solution for Phoenix ~ Devise like
   3. Run the installer
 
     You can replace `User` by the name of the module you want **Keeper** to create,
-    or be applied to (if it already exists).
+    or be applied to (if it already exists) followed by it's downcased plural name.
     ```
-    $ mix keeper.install User
+    $ mix keeper.install User users
     ```

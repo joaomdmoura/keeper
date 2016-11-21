@@ -6,6 +6,16 @@ defmodule Mix.Tasks.Keeper.InstallTest do
     :ok
   end
 
+  test "install task should work if resource name and its plural name are send" do
+    assert Mix.Tasks.Keeper.Install.run ["User", "users"]
+
+    on_exit fn ->
+      # Cleaning support test files
+      options = ["-rf", "priv/", "test/models/", "web/"]
+      {_stdout, 0} = System.cmd("rm", options)
+    end
+  end
+
   test "resource name must be passed as an argument" do
     assert_raise Mix.Error, fn ->
       Mix.Tasks.Keeper.Install.run []
