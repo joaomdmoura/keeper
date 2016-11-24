@@ -3,5 +3,5 @@ defmodule KeeperTest do
   doctest Keeper
 
   # Silence the terminal output on tests
-  # Mix.shell(Mix.Shell.Process)
+  Mix.shell(Mix.Shell.Process)
 end

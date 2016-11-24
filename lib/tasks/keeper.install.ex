@@ -26,7 +26,7 @@ defmodule Mix.Tasks.Keeper.Install do
     {_, parsed, _} = OptionParser.parse(args)
     valid_args = parsed |> validate_args!
 
-    Task.start fn -> generate_model(valid_args) end
+    generate_model(valid_args)
 
     print_instructions
   end
@@ -43,22 +43,20 @@ defmodule Mix.Tasks.Keeper.Install do
   end
 
   defp print_instructions do
-   Mix.shell.info (
-     """
+   Mix.shell.info """
      Now you're ready to go, just make sure you follow the next simple steps:
 
      #  Run the migrations
      $ mix ecto.migrate
      """
-   )
- end
-
-  defp model_defined?(model) do
-    schema = Module.concat model, nil
-    Code.ensure_compiled?(schema) || module_exists?(schema, "web/models")
   end
 
-  defp module_exists?(module, path) do
+  defp model_defined?(model) do
+    Mix.Phoenix.check_module_name_availability!(model) || module_exists?(model, "web/models")
+  end
+
+  defp module_exists?(model, path) do
+    module = Module.concat model, nil
     case File.ls path do
       {:ok, files} -> Enum.any? files, fn(fname) ->
         Path.join(path, fname)
@@ -70,7 +68,7 @@ defmodule Mix.Tasks.Keeper.Install do
 
   defp matches_module_definition?(file, module) do
     case File.read file do
-      {:ok, contents} -> contents =~ ~r/defmodule\s*#{inspect module}/
+      {:ok, contents} -> contents =~ ~r/defmodule\s*[A-Za-z0-9].+\.#{inspect module}/
       {:error, _} -> false
     end
   end
