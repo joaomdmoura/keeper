@@ -1,21 +1,17 @@
 defmodule Mix.Tasks.Keeper.InstallTest do
   use ExUnit.Case
 
-  @dumb_app_path Application.get_env(:keeper, :dumb_app_path)
-
   setup do
     Mix.Task.clear
     :ok
   end
 
   test "install task should work if resource name and its plural name are send" do
-    {_stdout, 0} = System.cmd("cd", [@dumb_app_path])
-
     assert Mix.Tasks.Keeper.Install.run ["User", "users"]
 
     on_exit fn ->
       # Cleaning support test files
-      options = ["-rf", "priv/", "test/models/", "web/"]
+      options = ["-rf", "web/"]
       {_stdout, 0} = System.cmd("rm", options)
     end
   end

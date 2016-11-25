@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.Keeper.Install do
   use Mix.Task
 
-  @shortdoc "Installs the Keeper to the Pheonix Application"
+  @shortdoc "Installs the Keeper to the Phoenix Application"
 
   @moduledoc """
   Installs Keeper for a specific Phoenix resource.
@@ -26,29 +26,33 @@ defmodule Mix.Tasks.Keeper.Install do
     {_, parsed, _} = OptionParser.parse(args)
     valid_args = parsed |> validate_args!
 
-    generate_model(valid_args)
+    app_module = Mix.Project.config
+    |> Keyword.fetch!(:app)
+    |> Atom.to_string
+    |> Mix.Phoenix.inflect
+
+    Task.start fn ->
+      valid_args
+      |> List.insert_at(-1, app_module[:base])
+      |> generate_model
+    end
 
     print_instructions
   end
 
-  defp generate_model([resource_name, plural_resource_name] = _args) do
+  defp generate_model([resource_name, plural_resource_name, app_module]) do
     unless model_defined?(resource_name) do
-      Mix.Tasks.Phoenix.Gen.Model.run [
-        resource_name,
-        plural_resource_name,
-        "email:string",
-        "password_hash:string"
+      fname = resource_name |> String.downcase |> Phoenix.Naming.underscore
+      opts = [
+        resource_name: resource_name,
+        plural_resource_name: plural_resource_name,
+        app_module: app_module
       ]
+
+      Mix.Phoenix.copy_from [".", :keeper],
+      "priv/templates/keeper.install/models", "", opts,
+      [{:eex, "resource.ex", "web/models/#{fname}.ex"}]
     end
-  end
-
-  defp print_instructions do
-   Mix.shell.info """
-     Now you're ready to go, just make sure you follow the next simple steps:
-
-     #  Run the migrations
-     $ mix ecto.migrate
-     """
   end
 
   defp model_defined?(model) do
@@ -90,10 +94,19 @@ defmodule Mix.Tasks.Keeper.Install do
     raise_with_help()
   end
 
+  defp print_instructions do
+   Mix.shell.info """
+     Now you're ready to go, just make sure you follow the next simple steps:
+
+     #  Run the migrations
+     $ mix ecto.migrate
+     """
+  end
+
   defp raise_with_help do
     Mix.raise """
-    mix keeper.install expects a singular name of the resource that it should
-    create or be applied to:
+    mix keeper.install expects a singular and plural name of the resource that
+    it should create or be applied to:
 
         mix keeper.install User users
     """
