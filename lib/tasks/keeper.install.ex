@@ -24,23 +24,17 @@ defmodule Mix.Tasks.Keeper.Install do
   """
   def run(args) do
     {_, parsed, _} = OptionParser.parse(args)
-    valid_args = parsed |> validate_args!
 
-    app_module = Mix.Project.config
-    |> Keyword.fetch!(:app)
-    |> Atom.to_string
-    |> Mix.Phoenix.inflect
+    valid_args = parsed
+    |> validate_args!
+    |> append_app_name
 
-    Task.start fn ->
-      valid_args
-      |> List.insert_at(-1, app_module[:base])
-      |> generate_model
-    end
+    generate_model(valid_args)
 
     print_instructions
   end
 
-  defp generate_model([resource_name, plural_resource_name, app_module]) do
+  defp generate_model([resource_name, plural_resource_name, app_module] = _args) do
     unless model_defined?(resource_name) do
       fname = resource_name |> String.downcase |> Phoenix.Naming.underscore
       opts = [
@@ -53,6 +47,15 @@ defmodule Mix.Tasks.Keeper.Install do
       "priv/templates/keeper.install/models", "", opts,
       [{:eex, "resource.ex", "web/models/#{fname}.ex"}]
     end
+  end
+
+  defp append_app_name(args) do
+    app_module = Mix.Project.config
+    |> Keyword.fetch!(:app)
+    |> Atom.to_string
+    |> Mix.Phoenix.inflect
+
+    List.insert_at(args, -1, app_module[:base])
   end
 
   defp model_defined?(model) do
