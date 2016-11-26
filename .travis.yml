@@ -9,7 +9,7 @@ sudo: false
 before_script:
   - mix deps.get --only test
 script:
-  - mix test
+  - MIX_ENV=test mix test
 after_script:
   - mix deps.get --only docs
   - MIX_ENV=docs mix inch.report
