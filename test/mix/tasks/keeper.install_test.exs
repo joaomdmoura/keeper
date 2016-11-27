@@ -1,8 +1,9 @@
 defmodule Mix.Tasks.Keeper.InstallTest do
   use ExUnit.Case
 
-  @web_path "web/"
+  @web_path "web"
   @model_path "web/models"
+  @migrations_path "priv/repo/migrations"
 
   setup do
     Mix.Task.clear
@@ -29,6 +30,16 @@ defmodule Mix.Tasks.Keeper.InstallTest do
     end
 
     on_exit &clean_support_files/0
+  end
+
+  test "successful installation should result on a new migration" do
+    successful_install
+
+    # # Check if the migration was generated correctly
+    # {:ok, files} = File.ls @migrations_path
+    # assert Enum.at(files, 0) =~ ~r/_create_user.exs/
+    #
+    # on_exit &clean_support_files/0
   end
 
   test "resource name must be passed as an argument" do

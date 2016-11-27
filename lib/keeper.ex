@@ -18,6 +18,5 @@ defmodule Keeper do
 
   @doc false
   def start(_type, _args) do
-    Keeper.Supervisor.start_link()
   end
 end

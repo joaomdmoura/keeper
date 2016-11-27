@@ -2,6 +2,8 @@ defmodule Mix.Tasks.Keeper.Install do
   use Mix.Task
 
   @shortdoc "Installs the Keeper to the Phoenix Application"
+  @model_path "web/models"
+  @migrations_path "priv/repo/migrations"
 
   @moduledoc """
   Installs Keeper for a specific Phoenix resource.
@@ -20,7 +22,8 @@ defmodule Mix.Tasks.Keeper.Install do
   """
 
   @doc """
-  Main method for the install task
+  Main method for the install task, it call other private methods that handle
+  the files generation and setup
   """
   def run(args) do
     {_, parsed, _} = OptionParser.parse(args)
@@ -30,11 +33,12 @@ defmodule Mix.Tasks.Keeper.Install do
     |> append_app_name
 
     generate_model(valid_args)
+    # generate_migration(valid_args)
 
     print_instructions
   end
 
-  defp generate_model([resource_name, plural_resource_name, app_module] = _args) do
+  defp generate_model([resource_name, plural_resource_name, app_module] = args) do
     unless model_defined?(resource_name) do
       fname = resource_name |> String.downcase |> Phoenix.Naming.underscore
       opts = [
@@ -47,6 +51,26 @@ defmodule Mix.Tasks.Keeper.Install do
       "priv/templates/keeper.install/models", "", opts,
       [{:eex, "resource.ex", "web/models/#{fname}.ex"}]
     end
+    args
+  end
+
+  defp generate_migration([resource_name, plural_resource_name, app_module] = args) do
+    migration_name = "create_#{plural_resource_name}"
+    Mix.Tasks.Ecto.Gen.Migration.run [migration_name]
+
+    fname = File.ls!(@migrations_path)
+    |> Enum.find(fn(name) -> name =~ ~r/[0-9]+\_#{migration_name}/ end)
+
+    fpath = Path.join(@migrations_path, fname)
+    content = File.read!(fpath)
+
+    template = Mix.Project.deps_paths[:keeper]
+    |> Path.join("priv/templates/keeper.install/migrations/create_resource.exs")
+    |> File.read!
+
+    new_content = Regex.replace(~r/  def change do\n{2} .+end/, content, template)
+
+    File.write!(fpath, new_content)
   end
 
   defp append_app_name(args) do
@@ -98,12 +122,16 @@ defmodule Mix.Tasks.Keeper.Install do
   end
 
   defp print_instructions do
-   Mix.shell.info """
-     Now you're ready to go, just make sure you follow the next simple steps:
+    Mix.shell.info """
+      ================================================
 
-     #  Run the migrations
-     $ mix ecto.migrate
-     """
+      Now you're ready to go, just make sure you follow the next simple steps:
+
+      #  Run the migrations
+      $ mix ecto.migrate
+
+      ================================================
+    """
   end
 
   defp raise_with_help do
