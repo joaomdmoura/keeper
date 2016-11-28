@@ -31,9 +31,8 @@ defmodule Mix.Tasks.Keeper.Install do
     valid_args = parsed
     |> validate_args!
     |> append_app_name
-
-    generate_model(valid_args)
-    # generate_migration(valid_args)
+    |> generate_model
+    # |> generate_migration
 
     print_instructions
   end
@@ -69,8 +68,8 @@ defmodule Mix.Tasks.Keeper.Install do
     |> File.read!
 
     new_content = Regex.replace(~r/  def change do\n{2} .+end/, content, template)
-
     File.write!(fpath, new_content)
+    args
   end
 
   defp append_app_name(args) do
