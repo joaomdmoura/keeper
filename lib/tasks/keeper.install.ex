@@ -32,7 +32,7 @@ defmodule Mix.Tasks.Keeper.Install do
   def run(args) do
     {_, parsed, _} = OptionParser.parse(args)
 
-    valid_args = parsed
+    parsed
     |> validate_args!
     |> append_app_name
     |> generate_model
@@ -57,7 +57,7 @@ defmodule Mix.Tasks.Keeper.Install do
     args
   end
 
-  defp generate_migration([resource_name, plural_resource_name, app_module] = args) do
+  defp generate_migration([_resource_name, plural_resource_name | _] = args) do
     migration_name = "create_#{plural_resource_name}"
     @migration_module.run [migration_name]
 
