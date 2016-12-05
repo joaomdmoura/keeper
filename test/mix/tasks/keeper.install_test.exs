@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.Keeper.InstallTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case
   alias Mix.Tasks.Keeper.Install.PathHelper
 
   @model_path PathHelper.model_path
@@ -35,8 +35,8 @@ defmodule Mix.Tasks.Keeper.InstallTest do
   test "successful installation should result on a new migration" do
     successful_install
 
-    {:ok, files} = File.ls @migrations_path
-    migration = Enum.at(files, 0)
+    migration = File.ls!(@migrations_path)
+    |> Enum.find(fn(name) -> name =~ ~r/[0-9]+\_create_users/ end)
 
     # Check if the migration was generated correctly
     assert migration == "000_create_users.exs"
