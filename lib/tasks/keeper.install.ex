@@ -1,9 +1,13 @@
 defmodule Mix.Tasks.Keeper.Install do
   use Mix.Task
+  alias Mix.Tasks.Keeper.Install.{PathHelper, MigrationTestAdapter}
 
   @shortdoc "Installs the Keeper to the Phoenix Application"
-  @model_path "web/models"
-  @migrations_path "priv/repo/migrations"
+
+  @model_path PathHelper.model_path
+  @templates_path PathHelper.templates_path
+  @migrations_path PathHelper.migrations_path
+  @migration_module if Mix.env != :test, do: Mix.Tasks.Ecto.Gen.Migration, else: MigrationTestAdapter
 
   @moduledoc """
   Installs Keeper for a specific Phoenix resource.
@@ -32,7 +36,7 @@ defmodule Mix.Tasks.Keeper.Install do
     |> validate_args!
     |> append_app_name
     |> generate_model
-    # |> generate_migration
+    |> generate_migration
 
     print_instructions
   end
@@ -47,15 +51,15 @@ defmodule Mix.Tasks.Keeper.Install do
       ]
 
       Mix.Phoenix.copy_from [".", :keeper],
-      "priv/templates/keeper.install/models", "", opts,
-      [{:eex, "resource.ex", "web/models/#{fname}.ex"}]
+      "#{@templates_path}/models", "", opts,
+      [{:eex, "resource.ex", "#{@model_path}/#{fname}.ex"}]
     end
     args
   end
 
   defp generate_migration([resource_name, plural_resource_name, app_module] = args) do
     migration_name = "create_#{plural_resource_name}"
-    Mix.Tasks.Ecto.Gen.Migration.run [migration_name]
+    @migration_module.run [migration_name]
 
     fname = File.ls!(@migrations_path)
     |> Enum.find(fn(name) -> name =~ ~r/[0-9]+\_#{migration_name}/ end)
@@ -63,8 +67,8 @@ defmodule Mix.Tasks.Keeper.Install do
     fpath = Path.join(@migrations_path, fname)
     content = File.read!(fpath)
 
-    template = Mix.Project.deps_paths[:keeper]
-    |> Path.join("priv/templates/keeper.install/migrations/create_resource.exs")
+    template = "#{PathHelper.keeper_path}/#{@templates_path}"
+    |> Path.join("migrations/create_resource.exs")
     |> File.read!
 
     new_content = Regex.replace(~r/  def change do\n{2} .+end/, content, template)
@@ -82,7 +86,7 @@ defmodule Mix.Tasks.Keeper.Install do
   end
 
   defp model_defined?(model) do
-    Mix.Phoenix.check_module_name_availability!(model) || module_exists?(model, "web/models")
+    Mix.Phoenix.check_module_name_availability!(model) || module_exists?(model, @model_path)
   end
 
   defp module_exists?(model, path) do

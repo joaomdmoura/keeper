@@ -1,9 +1,10 @@
 defmodule Mix.Tasks.Keeper.InstallTest do
   use ExUnit.Case
+  alias Mix.Tasks.Keeper.Install.PathHelper
 
-  @web_path "web"
-  @model_path "web/models"
-  @migrations_path "priv/repo/migrations"
+  @model_path PathHelper.model_path
+  @templates_path PathHelper.templates_path
+  @migrations_path PathHelper.migrations_path
 
   setup do
     Mix.Task.clear
@@ -35,11 +36,22 @@ defmodule Mix.Tasks.Keeper.InstallTest do
   test "successful installation should result on a new migration" do
     successful_install
 
-    # # Check if the migration was generated correctly
-    # {:ok, files} = File.ls @migrations_path
-    # assert Enum.at(files, 0) =~ ~r/_create_user.exs/
-    #
-    # on_exit &clean_support_files/0
+    {:ok, files} = File.ls @migrations_path
+    migration = Enum.at(files, 0)
+
+    # Check if the migration was generated correctly
+    assert migration == "000_create_users.exs"
+
+    # Check if the content of the migration matches the template
+    content = Path.join(@migrations_path, migration) |> File.read!
+
+    template = @templates_path
+    |> Path.join("migrations/create_resource.exs")
+    |> File.read!
+
+    assert String.contains? content, template
+
+    on_exit &clean_support_files/0
   end
 
   test "resource name must be passed as an argument" do
@@ -70,7 +82,7 @@ defmodule Mix.Tasks.Keeper.InstallTest do
 
   defp clean_support_files do
     # Cleaning support test files
-    options = ["-rf", @web_path]
-    {_stdout, 0} = System.cmd("rm", options)
+    {_stdout, 0} = System.cmd("rm", ["-rf", @model_path])
+    {_stdout, 0} = System.cmd("rm", ["test/support/migrations/000_create_users.exs"])
   end
 end
