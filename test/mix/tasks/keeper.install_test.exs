@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Keeper.InstallTest do
 
   test "install task should work if resource name and its plural name are send" do
     assert successful_install
-    clean_support_files
+    on_exit &clean_support_files/0
   end
 
   test "successful installation should result on a model module" do
@@ -29,7 +29,7 @@ defmodule Mix.Tasks.Keeper.InstallTest do
       assert contents =~ ~r/defmodule\s*[A-Za-z0-9].+\.User/
     end
 
-    clean_support_files
+    on_exit &clean_support_files/0
   end
 
   test "successful installation should result on a new migration" do
@@ -50,7 +50,7 @@ defmodule Mix.Tasks.Keeper.InstallTest do
 
     assert String.contains? content, template
 
-    clean_support_files
+    on_exit &clean_support_files/0
   end
 
   test "resource name must be passed as an argument" do
