@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.Keeper.InstallTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
   alias Mix.Tasks.Keeper.Install.PathHelper
 
   @model_path PathHelper.model_path
@@ -13,8 +13,7 @@ defmodule Mix.Tasks.Keeper.InstallTest do
 
   test "install task should work if resource name and its plural name are send" do
     assert successful_install
-
-    on_exit &clean_support_files/0
+    clean_support_files
   end
 
   test "successful installation should result on a model module" do
@@ -30,7 +29,7 @@ defmodule Mix.Tasks.Keeper.InstallTest do
       assert contents =~ ~r/defmodule\s*[A-Za-z0-9].+\.User/
     end
 
-    on_exit &clean_support_files/0
+    clean_support_files
   end
 
   test "successful installation should result on a new migration" do
@@ -51,7 +50,7 @@ defmodule Mix.Tasks.Keeper.InstallTest do
 
     assert String.contains? content, template
 
-    on_exit &clean_support_files/0
+    clean_support_files
   end
 
   test "resource name must be passed as an argument" do
