@@ -1,4 +1,4 @@
-# Keeper
+![Keeper Logo](http://joaomdmoura.com/assets/keeper.png)
 
 Flexible and out of the box authentication solution for Phoenix ~ Devise like
 
