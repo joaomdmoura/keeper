@@ -37,6 +37,7 @@ defmodule Mix.Tasks.Keeper.Install do
     |> append_app_name
     |> generate_model
     |> generate_migration
+    |> add_routes
 
     print_instructions
   end
@@ -74,6 +75,10 @@ defmodule Mix.Tasks.Keeper.Install do
     new_content = Regex.replace(~r/  def change do\n{2} .+end/, content, template)
     File.write!(fpath, new_content)
     args
+  end
+
+  defp add_routes(args) do
+
   end
 
   defp append_app_name(args) do
