@@ -4,9 +4,10 @@ defmodule Mix.Tasks.Keeper.Install do
 
   @shortdoc "Installs the Keeper to the Phoenix Application"
 
-  @model_path PathHelper.model_path
-  @templates_path PathHelper.templates_path
-  @migrations_path PathHelper.migrations_path
+  @model_path PathHelper.env_path(:model_path)
+  @router_path PathHelper.env_path(:router_path)
+  @templates_path PathHelper.env_path(:templates_path)
+  @migrations_path PathHelper.env_path(:migrations_path)
   @migration_module if Mix.env != :test, do: Mix.Tasks.Ecto.Gen.Migration, else: MigrationTestAdapter
 
   @moduledoc """
@@ -77,8 +78,23 @@ defmodule Mix.Tasks.Keeper.Install do
     args
   end
 
-  defp add_routes(args) do
+  defp add_routes([resource_name, plural_resource_name, app_module] = args) do
+    fpath = Path.join(@router_path, "router.ex")
+    content = File.read!(fpath)
 
+    opts = [
+      resource_name: resource_name,
+      plural_resource_name: plural_resource_name,
+      app_module: app_module
+    ]
+
+    template = "#{PathHelper.keeper_path}/#{@templates_path}"
+    |> Path.join("router.ex")
+    |> EEx.eval_file(opts)
+
+    new_content = Regex.replace(~r/scope "\/", #{app_module} do/, content, template)
+    File.write!(fpath, new_content)
+    args
   end
 
   defp append_app_name(args) do
