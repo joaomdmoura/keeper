@@ -5,6 +5,7 @@ defmodule Mix.Tasks.Keeper.Install.PathHelper do
     router_path: "test/support/web",
     model_path: "test/support/models",
     migrations_path: "test/support/migrations",
+    controllers_path: "test/support/controllers",
     templates_path: "priv/templates/keeper.install"
   }
 
@@ -13,6 +14,7 @@ defmodule Mix.Tasks.Keeper.Install.PathHelper do
     router_path: "web",
     model_path: "web/models",
     migrations_path: "priv/repo/migrations",
+    controllers_path: "web/controllers",
     templates_path: "priv/templates/keeper.install"
   }
 

@@ -6,6 +6,7 @@ defmodule Mix.Tasks.Keeper.InstallTest do
   @router_path PathHelper.env_path(:router_path)
   @templates_path PathHelper.env_path(:templates_path)
   @migrations_path PathHelper.env_path(:migrations_path)
+  @controllers_path PathHelper.env_path(:controllers_path)
 
   setup do
     Mix.Task.clear
@@ -39,6 +40,16 @@ defmodule Mix.Tasks.Keeper.InstallTest do
     # Check for the new auth routes
     {:ok, contents} = Path.join(@router_path, "router.ex") |> File.read
     assert contents =~ ~r/resources "\/users", UserController, only: \[:create\]/
+
+    on_exit &clean_support_files/0
+  end
+
+  test "successful installation should create a new controller" do
+    successful_install
+
+    # Check for the new controller declaration
+    {:ok, contents} = Path.join(@controllers_path, "user_controller.ex") |> File.read
+    assert contents =~ ~r/defmodule Keeper.UserController do/
 
     on_exit &clean_support_files/0
   end
@@ -99,6 +110,7 @@ defmodule Mix.Tasks.Keeper.InstallTest do
     # Cleaning support test files
     {_stdout, 0} = System.cmd("rm", ["-rf", Path.join(@router_path, "router.ex")])
     {_stdout, 0} = System.cmd("rm", ["-rf", @model_path])
+    {_stdout, 0} = System.cmd("rm", ["-rf", @controllers_path])
     {_stdout, 0} = System.cmd("rm", ["test/support/migrations/000_create_users.exs"])
   end
 end

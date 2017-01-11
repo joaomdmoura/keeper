@@ -8,6 +8,7 @@ defmodule Mix.Tasks.Keeper.Install do
   @router_path PathHelper.env_path(:router_path)
   @templates_path PathHelper.env_path(:templates_path)
   @migrations_path PathHelper.env_path(:migrations_path)
+  @controllers_path PathHelper.env_path(:controllers_path)
   @migration_module if Mix.env != :test, do: Mix.Tasks.Ecto.Gen.Migration, else: MigrationTestAdapter
 
   @moduledoc """
@@ -39,12 +40,13 @@ defmodule Mix.Tasks.Keeper.Install do
     |> generate_model
     |> generate_migration
     |> add_routes
+    |> generate_controller
 
     print_instructions
   end
 
   defp generate_model([resource_name, plural_resource_name, app_module] = args) do
-    unless model_defined?(resource_name) do
+    unless module_exists?(resource_name) do
       fname = resource_name |> String.downcase |> Phoenix.Naming.underscore
       opts = [
         resource_name: resource_name,
@@ -97,6 +99,23 @@ defmodule Mix.Tasks.Keeper.Install do
     args
   end
 
+  defp generate_controller([resource_name, plural_resource_name, app_module] = args) do
+    unless module_exists?("#{resource_name}Controller") do
+      rname = resource_name |> String.downcase |> Phoenix.Naming.underscore
+      fname = "#{rname}_controller"
+      opts = [
+        resource_name: resource_name,
+        plural_resource_name: plural_resource_name,
+        app_module: app_module
+      ]
+
+      Mix.Phoenix.copy_from [".", :keeper],
+      "#{@templates_path}/controllers", "", opts,
+      [{:eex, "resource_controller.ex", "#{@controllers_path}/#{fname}.ex"}]
+    end
+    args
+  end
+
   defp append_app_name(args) do
     app_module = Mix.Project.config
     |> Keyword.fetch!(:app)
@@ -106,12 +125,13 @@ defmodule Mix.Tasks.Keeper.Install do
     List.insert_at(args, -1, app_module[:base])
   end
 
-  defp model_defined?(model) do
-    Mix.Phoenix.check_module_name_availability!(model) || module_exists?(model, @model_path)
+  defp module_exists?(module) do
+    Mix.Phoenix.check_module_name_availability!(module) ||
+    module_exists?(module, @model_path) ||
+    module_exists?(module, @controllers_path)
   end
-
-  defp module_exists?(model, path) do
-    module = Module.concat model, nil
+  defp module_exists?(module, path) do
+    module = Module.concat module, nil
     case File.ls path do
       {:ok, files} -> Enum.any? files, fn(fname) ->
         Path.join(path, fname)
