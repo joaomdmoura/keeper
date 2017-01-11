@@ -3,6 +3,7 @@ defmodule Mix.Tasks.Keeper.Install.PathHelper do
   @test_paths %{
     keeper_path: ".",
     router_path: "test/support/web",
+    views_path: "test/support/views",
     model_path: "test/support/models",
     migrations_path: "test/support/migrations",
     controllers_path: "test/support/controllers",
@@ -12,6 +13,7 @@ defmodule Mix.Tasks.Keeper.Install.PathHelper do
   @prod_paths %{
     keeper_path: nil,
     router_path: "web",
+    views_path: "web/views",
     model_path: "web/models",
     migrations_path: "priv/repo/migrations",
     controllers_path: "web/controllers",

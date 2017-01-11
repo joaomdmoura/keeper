@@ -5,6 +5,7 @@ defmodule Mix.Tasks.Keeper.Install do
   @shortdoc "Installs the Keeper to the Phoenix Application"
 
   @model_path PathHelper.env_path(:model_path)
+  @views_path PathHelper.env_path(:views_path)
   @router_path PathHelper.env_path(:router_path)
   @templates_path PathHelper.env_path(:templates_path)
   @migrations_path PathHelper.env_path(:migrations_path)
@@ -22,9 +23,11 @@ defmodule Mix.Tasks.Keeper.Install do
   The installation task will follow:
 
     * Add :keeper configuration to `config/config.exs`.
-    * Check for resource existence / Create the resource.
-    * Generate migration files.
-    * Generate view files.
+    * Create the resource.
+    * Generate migrations.
+    * Add new routes.
+    * Generate controller.
+    * Generate view.
   """
 
   @doc """
@@ -41,6 +44,7 @@ defmodule Mix.Tasks.Keeper.Install do
     |> generate_migration
     |> add_routes
     |> generate_controller
+    |> generate_view
 
     print_instructions
   end
@@ -112,6 +116,23 @@ defmodule Mix.Tasks.Keeper.Install do
       Mix.Phoenix.copy_from [".", :keeper],
       "#{@templates_path}/controllers", "", opts,
       [{:eex, "resource_controller.ex", "#{@controllers_path}/#{fname}.ex"}]
+    end
+    args
+  end
+
+  def generate_view([resource_name, plural_resource_name, app_module] = args) do
+    unless module_exists?("#{resource_name}View") do
+      rname = resource_name |> String.downcase |> Phoenix.Naming.underscore
+      fname = "#{rname}_view"
+      opts = [
+        resource_name: resource_name,
+        plural_resource_name: plural_resource_name,
+        app_module: app_module
+      ]
+
+      Mix.Phoenix.copy_from [".", :keeper],
+      "#{@templates_path}/views", "", opts,
+      [{:eex, "resource_view.ex", "#{@views_path}/#{fname}.ex"}]
     end
     args
   end
