@@ -24,8 +24,8 @@ defmodule Keeper.Mixfile do
 
   defp deps do
     [{:phoenix, "~> 1.2.1"},
-     {:ecto, "~> 2.0"},
-     {:comeonin, "~> 2.5"},
+     {:ecto, "~> 2.1"},
+     {:comeonin, "~> 3.0"},
 
      {:inch_ex, "~> 0.5", only: :docs}]
   end
