@@ -2,9 +2,12 @@ defmodule Mix.Tasks.Keeper.InstallTest do
   use ExUnit.Case
   alias Mix.Tasks.Keeper.Install.PathHelper
 
-  @model_path PathHelper.model_path
-  @templates_path PathHelper.templates_path
-  @migrations_path PathHelper.migrations_path
+  @model_path PathHelper.env_path(:model_path)
+  @views_path PathHelper.env_path(:views_path)
+  @router_path PathHelper.env_path(:router_path)
+  @templates_path PathHelper.env_path(:templates_path)
+  @migrations_path PathHelper.env_path(:migrations_path)
+  @controllers_path PathHelper.env_path(:controllers_path)
 
   setup do
     Mix.Task.clear
@@ -28,6 +31,33 @@ defmodule Mix.Tasks.Keeper.InstallTest do
       {:ok, contents} = Path.join(@model_path, fname) |> File.read
       assert contents =~ ~r/defmodule\s*[A-Za-z0-9].+\.User/
     end
+
+    on_exit &clean_support_files/0
+  end
+
+  test "successful installation should update the router with new routes" do
+    successful_install
+
+    {:ok, contents} = Path.join(@router_path, "router.ex") |> File.read
+    assert contents =~ ~r/resources "\/users", UserController, only: \[:create\]/
+
+    on_exit &clean_support_files/0
+  end
+
+  test "successful installation should create a new controller" do
+    successful_install
+
+    {:ok, contents} = Path.join(@controllers_path, "user_controller.ex") |> File.read
+    assert contents =~ ~r/defmodule Keeper.UserController do/
+
+    on_exit &clean_support_files/0
+  end
+
+  test "successful installation should create a new view" do
+    successful_install
+
+    {:ok, contents} = Path.join(@views_path, "user_view.ex") |> File.read
+    assert contents =~ ~r/defmodule Keeper.UserView do/
 
     on_exit &clean_support_files/0
   end
@@ -77,11 +107,17 @@ defmodule Mix.Tasks.Keeper.InstallTest do
     end
   end
 
-  defp successful_install, do: Mix.Tasks.Keeper.Install.run ["User", "users"]
+  defp successful_install do
+    {_stdout, 0} = System.cmd("cp",
+      [Path.join(@router_path, "router_template.ex"), Path.join(@router_path, "router.ex")]
+    )
+    Mix.Tasks.Keeper.Install.run ["User", "users"]
+  end
 
   defp clean_support_files do
     # Cleaning support test files
-    {_stdout, 0} = System.cmd("rm", ["-rf", @model_path])
+    {_stdout, 0} = System.cmd("rm", ["-rf", Path.join(@router_path, "router.ex")])
+    {_stdout, 0} = System.cmd("rm", ["-rf", @views_path, @model_path, @controllers_path])
     {_stdout, 0} = System.cmd("rm", ["test/support/migrations/000_create_users.exs"])
   end
 end

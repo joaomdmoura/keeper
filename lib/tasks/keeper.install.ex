@@ -4,9 +4,12 @@ defmodule Mix.Tasks.Keeper.Install do
 
   @shortdoc "Installs the Keeper to the Phoenix Application"
 
-  @model_path PathHelper.model_path
-  @templates_path PathHelper.templates_path
-  @migrations_path PathHelper.migrations_path
+  @model_path PathHelper.env_path(:model_path)
+  @views_path PathHelper.env_path(:views_path)
+  @router_path PathHelper.env_path(:router_path)
+  @templates_path PathHelper.env_path(:templates_path)
+  @migrations_path PathHelper.env_path(:migrations_path)
+  @controllers_path PathHelper.env_path(:controllers_path)
   @migration_module if Mix.env != :test, do: Mix.Tasks.Ecto.Gen.Migration, else: MigrationTestAdapter
 
   @moduledoc """
@@ -20,9 +23,11 @@ defmodule Mix.Tasks.Keeper.Install do
   The installation task will follow:
 
     * Add :keeper configuration to `config/config.exs`.
-    * Check for resource existence / Create the resource.
-    * Generate migration files.
-    * Generate view files.
+    * Create the resource.
+    * Generate migrations.
+    * Add new routes.
+    * Generate controller.
+    * Generate view.
   """
 
   @doc """
@@ -35,21 +40,20 @@ defmodule Mix.Tasks.Keeper.Install do
     parsed
     |> validate_args!
     |> append_app_name
+    |> convert_args_to_map
     |> generate_model
     |> generate_migration
     |> add_routes
+    |> generate_controller
+    |> generate_view
 
     print_instructions
   end
 
-  defp generate_model([resource_name, plural_resource_name, app_module] = args) do
-    unless model_defined?(resource_name) do
-      fname = resource_name |> String.downcase |> Phoenix.Naming.underscore
-      opts = [
-        resource_name: resource_name,
-        plural_resource_name: plural_resource_name,
-        app_module: app_module
-      ]
+  defp generate_model(%{resource_name: ranme} = args) do
+    unless module_exists?(ranme) do
+      fname = ranme |> String.downcase |> Phoenix.Naming.underscore
+      opts = convert_to_opts(args)
 
       Mix.Phoenix.copy_from [".", :keeper],
       "#{@templates_path}/models", "", opts,
@@ -58,8 +62,8 @@ defmodule Mix.Tasks.Keeper.Install do
     args
   end
 
-  defp generate_migration([_resource_name, plural_resource_name | _] = args) do
-    migration_name = "create_#{plural_resource_name}"
+  defp generate_migration(%{plural_resource_name: prname} = args) do
+    migration_name = "create_#{prname}"
     @migration_module.run [migration_name]
 
     fname = File.ls!(@migrations_path)
@@ -77,8 +81,44 @@ defmodule Mix.Tasks.Keeper.Install do
     args
   end
 
-  defp add_routes(args) do
+  defp add_routes(%{app_module: appm} = args) do
+    fpath = Path.join(@router_path, "router.ex")
+    content = File.read!(fpath)
+    opts = convert_to_opts(args)
 
+    template = "#{PathHelper.keeper_path}/#{@templates_path}"
+    |> Path.join("router.ex")
+    |> EEx.eval_file(opts)
+
+    new_content = Regex.replace(~r/scope "\/", #{appm} do/, content, template)
+    File.write!(fpath, new_content)
+    args
+  end
+
+  defp generate_controller(%{resource_name: rname} = args) do
+    unless module_exists?("#{rname}Controller") do
+      rname = rname |> String.downcase |> Phoenix.Naming.underscore
+      fname = "#{rname}_controller"
+      copy_template("controllers", "resource_controller.ex", "#{@controllers_path}/#{fname}.ex", args)
+    end
+    args
+  end
+
+  def generate_view(%{resource_name: rname} = args) do
+    unless module_exists?("#{rname}View") do
+      rname = rname |> String.downcase |> Phoenix.Naming.underscore
+      fname = "#{rname}_view"
+      copy_template("views", "resource_view.ex", "#{@views_path}/#{fname}.ex", args)
+    end
+    args
+  end
+
+  defp copy_template(kind, from, to, args) do
+    opts = convert_to_opts(args)
+
+    Mix.Phoenix.copy_from [".", :keeper],
+    "#{@templates_path}/#{kind}", "", opts,
+    [{:eex, from, to}]
   end
 
   defp append_app_name(args) do
@@ -90,12 +130,13 @@ defmodule Mix.Tasks.Keeper.Install do
     List.insert_at(args, -1, app_module[:base])
   end
 
-  defp model_defined?(model) do
-    Mix.Phoenix.check_module_name_availability!(model) || module_exists?(model, @model_path)
+  defp module_exists?(module) do
+    Mix.Phoenix.check_module_name_availability!(module) ||
+    module_exists?(module, @model_path) ||
+    module_exists?(module, @controllers_path)
   end
-
-  defp module_exists?(model, path) do
-    module = Module.concat model, nil
+  defp module_exists?(module, path) do
+    module = Module.concat module, nil
     case File.ls path do
       {:ok, files} -> Enum.any? files, fn(fname) ->
         Path.join(path, fname)
@@ -110,6 +151,22 @@ defmodule Mix.Tasks.Keeper.Install do
       {:ok, contents} -> contents =~ ~r/defmodule\s*[A-Za-z0-9].+\.#{inspect module}/
       {:error, _} -> false
     end
+  end
+
+  defp convert_to_opts(%{resource_name: ranme, plural_resource_name: prname, app_module: appm} = args) do
+    [
+      resource_name: ranme,
+      plural_resource_name: prname,
+      app_module: appm
+    ]
+  end
+
+  defp convert_args_to_map([resource_name, plural_resource_name, app_module] = args) do
+    %{
+      resource_name: resource_name,
+      plural_resource_name: plural_resource_name,
+      app_module: app_module,
+    }
   end
 
   defp validate_args!([resource_name, plural_resource_name] = args) do
