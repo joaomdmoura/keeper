@@ -14,24 +14,24 @@ Flexible and out of the box authentication solution for Phoenix ~ Devise like
 
   1. Add `keeper` to your list of dependencies in `mix.exs`:
 
-    ```elixir
-    def deps do
-      [{:keeper, "~> 0.0.1-rc"}]
-    end
-    ```
+```elixir
+def deps do
+  [{:keeper, "~> 0.0.1-rc"}]
+end
+```
 
   2. Ensure `keeper` is started before your application:
 
-    ```elixir
-    def application do
-      [applications: [:keeper]]
-    end
-    ```
+```elixir
+def application do
+  [applications: [:keeper]]
+end
+```
 
   3. Run the installer
 
     You can replace `User` by the name of the module you want **Keeper** to create,
     or be applied to (if it already exists) followed by it's downcased plural name.
-    ```
-    $ mix keeper.install User users
-    ```
+```
+$ mix keeper.install User users
+```
