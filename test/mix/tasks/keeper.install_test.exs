@@ -47,7 +47,7 @@ defmodule Mix.Tasks.Keeper.InstallTest do
   test "successful installation should create a new controller" do
     successful_install
 
-    {:ok, contents} = Path.join(@controllers_path, "user_controller.ex") |> File.read
+    {:ok, contents} = @controllers_path |> Path.join("user_controller.ex") |> File.read
     assert contents =~ ~r/defmodule Keeper.UserController do/
 
     on_exit &clean_support_files/0
