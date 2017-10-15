@@ -38,7 +38,7 @@ defmodule Mix.Tasks.Keeper.InstallTest do
   test "successful installation should update the router with new routes" do
     successful_install
 
-    {:ok, contents} = @model_path |> Path.join("router.ex") |> File.read
+    {:ok, contents} = @router_path |> Path.join("router.ex") |> File.read
     assert contents =~ ~r/resources "\/users", UserController, only: \[:create\]/
 
     on_exit &clean_support_files/0
