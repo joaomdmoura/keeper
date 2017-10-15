@@ -66,7 +66,8 @@ defmodule Mix.Tasks.Keeper.Install do
     migration_name = "create_#{prname}"
     @migration_module.run [migration_name]
 
-    fname = File.ls!(@migrations_path)
+    fname = @migrations_path
+    |> File.ls!()
     |> Enum.find(fn(name) -> name =~ ~r/[0-9]+\_#{migration_name}/ end)
 
     fpath = Path.join(@migrations_path, fname)
@@ -139,7 +140,8 @@ defmodule Mix.Tasks.Keeper.Install do
     module = Module.concat module, nil
     case File.ls path do
       {:ok, files} -> Enum.any? files, fn(fname) ->
-        Path.join(path, fname)
+        path
+        |> Path.join(fname)
         |> matches_module_definition?(module)
       end
       {:error, _} -> false

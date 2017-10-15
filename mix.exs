@@ -23,11 +23,11 @@ defmodule Keeper.Mixfile do
   end
 
   defp deps do
-    [{:phoenix, "~> 1.2.1"},
-     {:ecto, "~> 2.1"},
-     {:comeonin, "~> 3.0"},
+    [{:phoenix, "~> 1.2.4"},
+     {:ecto, "~> 2.1.4"},
+     {:comeonin, "~> 3.0.2"},
 
-     {:inch_ex, "~> 0.5", only: :docs}]
+     {:inch_ex, "~> 0.5.6", only: :docs}]
   end
 
   defp package do

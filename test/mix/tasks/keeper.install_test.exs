@@ -28,7 +28,7 @@ defmodule Mix.Tasks.Keeper.InstallTest do
 
     # Check for the correct module name
     Enum.each files, fn(fname) ->
-      {:ok, contents} = Path.join(@model_path, fname) |> File.read
+      {:ok, contents} = @model_path |> Path.join(fname) |> File.read
       assert contents =~ ~r/defmodule\s*[A-Za-z0-9].+\.User/
     end
 
@@ -38,7 +38,7 @@ defmodule Mix.Tasks.Keeper.InstallTest do
   test "successful installation should update the router with new routes" do
     successful_install
 
-    {:ok, contents} = Path.join(@router_path, "router.ex") |> File.read
+    {:ok, contents} = @model_path |> Path.join("router.ex") |> File.read
     assert contents =~ ~r/resources "\/users", UserController, only: \[:create\]/
 
     on_exit &clean_support_files/0
@@ -56,7 +56,7 @@ defmodule Mix.Tasks.Keeper.InstallTest do
   test "successful installation should create a new view" do
     successful_install
 
-    {:ok, contents} = Path.join(@views_path, "user_view.ex") |> File.read
+    {:ok, contents} = @views_path |> Path.join("user_view.ex") |> File.read
     assert contents =~ ~r/defmodule Keeper.UserView do/
 
     on_exit &clean_support_files/0
@@ -65,14 +65,15 @@ defmodule Mix.Tasks.Keeper.InstallTest do
   test "successful installation should result on a new migration" do
     successful_install
 
-    migration = File.ls!(@migrations_path)
+    migration = @migrations_path
+    |> File.ls!()
     |> Enum.find(fn(name) -> name =~ ~r/[0-9]+\_create_users/ end)
 
     # Check if the migration was generated correctly
     assert migration == "000_create_users.exs"
 
     # Check if the content of the migration matches the template
-    content = Path.join(@migrations_path, migration) |> File.read!
+    content = @migrations_path |> Path.join(migration) |> File.read!
 
     template = @templates_path
     |> Path.join("migrations/create_resource.exs")
