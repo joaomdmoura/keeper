@@ -18,5 +18,6 @@ defmodule Keeper do
 
   @doc false
   def start(_type, _args) do
+    IO.puts("lol")
   end
 end
